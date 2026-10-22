@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Profile | TO DO Daily</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x2=%221%22 y2=%221%22%3E%3Cstop stop-color=%22%23e50914%22/%3E%3Cstop offset=%221%22 stop-color=%22%23b20710%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2240%22 height=%2240%22 rx=%2210%22 fill=%22url(%23g)%22/%3E%3Cpath d=%22m10 20 7 7 14-15%22 fill=%22none%22 stroke=%22white%22 stroke-width=%223.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    <script src="profile.js" defer></script>
+</head>
+<body class="setup-page">
+    <main class="setup-card profile-card">
+        <a class="brand setup-brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" role="img" focusable="false"><path d="M11 20.5 17.2 27 29.5 13.5" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="brand-wordmark"><span class="brand-main">TO DO</span> <span class="accent">Daily</span></span>
+        </a>
+
+        
+        <span class="eyebrow">MAKE IT PERSONAL</span>
+        <h1>Almost there! Tell us about you.</h1>
+        <p class="setup-description">Set up your profile and make this space yours.</p>
+
+        <form id="profileForm" novalidate>
+            <div class="field-group">
+                <label for="username">Username</label>
+                <div class="input-wrap">
+                    <span class="input-icon">@</span>
+                    <input id="username" type="text" minlength="3" maxlength="20" autocomplete="off" placeholder="Enter your username" required>
+                </div>
+                <p class="field-hint">3–20 characters. Letters, numbers and single spaces.</p>
+                <p class="field-error" id="usernameError" role="alert"></p>
+            </div>
+
+            <div class="field-group">
+                <label for="dob">Date of birth</label>
+                <div class="dob-selects">
+                    <select id="dobDay" aria-label="Date" required><option value="">Date</option></select>
+                    <select id="dobMonth" aria-label="Month" required><option value="">Month</option></select>
+                    <select id="dobYear" aria-label="Year" required><option value="">Year</option></select>
+                </div>
+                <p class="field-error" id="dobError" role="alert"></p>
+                
+            </div>
+
+            <fieldset class="gender-field">
+                <legend>Gender</legend>
+                <div class="gender-options">
+                    <label class="gender-option"><input type="radio" name="gender" value="Male"><span>Male</span></label>
+                    <label class="gender-option"><input type="radio" name="gender" value="Female"><span>Female</span></label>
+                    <label class="gender-option"><input type="radio" name="gender" value="Other"><span>Other</span></label>
+                    <label class="gender-option"><input type="radio" name="gender" value="Prefer not to say"><span>Prefer not to say</span></label>
+                </div>
+                <p class="field-error" id="genderError" role="alert"></p>
+            </fieldset>
+
+            <p class="form-error" id="profileError" role="alert"></p>
+            <button class="btn btn-primary auth-submit" type="submit">
+                <span>Complete profile</span><span>→</span>
+            </button>
+        </form>
+
+        <button class="text-button setup-logout" id="profileLogout" type="button">Log out</button>
+    </main>
+</body>
+</html>

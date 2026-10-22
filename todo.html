@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>TO DO Daily | Your Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x2=%221%22 y2=%221%22%3E%3Cstop stop-color=%22%23e50914%22/%3E%3Cstop offset=%221%22 stop-color=%22%23b20710%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2240%22 height=%2240%22 rx=%2210%22 fill=%22url(%23g)%22/%3E%3Cpath d=%22m10 20 7 7 14-15%22 fill=%22none%22 stroke=%22white%22 stroke-width=%223.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E">
+    <script>
+        try { document.documentElement.dataset.theme = localStorage.getItem("todoDaily_lastTheme") || "black-red"; } catch {}
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <script src="todo.js" defer></script>
+</head>
+<body class="dashboard-page">
+    <!-- Navbar -->
+    <header class="navbar">
+        <a class="brand" href="todo.html">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" role="img" focusable="false"><path d="M11 20.5 17.2 27 29.5 13.5" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="brand-wordmark"><span class="brand-main">TO DO</span> <span class="accent">Daily</span></span>
+        </a>
+
+        <div class="live-clock" id="liveClock" role="timer" aria-label="Current local date and time"><strong id="clockLine">Thu, 15 Oct 2026  |  09:18:45 PM</strong></div>
+        <div class="nav-user">
+            <span class="nav-username" id="navUsername">User</span>
+            <button class="profile-trigger" id="profileToggle" type="button"
+                aria-label="Open profile menu" aria-expanded="false" aria-controls="profilePanel">
+                <span class="menu-bar" aria-hidden="true"></span>
+                <span class="menu-bar" aria-hidden="true"></span>
+                <span class="menu-bar" aria-hidden="true"></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="welcome-section">
+            <span class="eyebrow"><span class="status-dot"></span> YOUR PERSONAL WORKSPACE</span>
+            <h1 id="greeting">Good morning, <span class="accent">User.</span></h1>
+            <p>Small steps create momentum. Consistency builds greatness. Start where you are, give your best, and make today a step toward the life you dream of.</p>
+        </section>
+
+        <section class="stats-grid" aria-label="Task statistics">
+            <article class="stat-card">
+                <span class="stat-icon">☷</span>
+                <p class="stat-label">TOTAL TASKS</p>
+                <p class="stat-value" id="totalStat">0</p>
+                <p class="stat-caption">Everything on your list</p>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon">◷</span>
+                <p class="stat-label">REMAINING</p>
+                <p class="stat-value" id="remainingStat">0</p>
+                <p class="stat-caption">One step at a time</p>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon">✓</span>
+                <p class="stat-label">COMPLETED</p>
+                <p class="stat-value"><span id="completedStat">0</span><span class="stat-percent">%</span></p>
+                <p class="stat-caption">Wins worth celebrating</p>
+            </article>
+        </section>
+
+        <section class="task-panel">
+            <header class="panel-heading">
+                <div>
+                    <span class="eyebrow">STAY ON TRACK</span>
+                    <h2>MY TASKS<span class="accent">.</span></h2>
+                </div>
+                <span class="task-count-badge" id="taskCount">0 tasks left</span>
+            </header>
+
+        <!-- My Tasks Boxes: switch between daily, weekday, and weekend task lists. -->
+        <nav class="task-view-cards" aria-label="My Tasks sections" role="group">
+            <button type="button" class="task-view-card selected" data-task-view="daily" aria-label="Show Daily Progress tasks" aria-pressed="true"><span>DAILY PROGRESS</span><small>Today's task list</small></button>
+            <button type="button" class="task-view-card" data-task-view="weekdays" aria-label="Show Weekdays tasks" aria-pressed="false"><span>WEEKDAYS</span><small>Monday to Friday</small></button>
+            <button type="button" class="task-view-card" data-task-view="weekend" aria-label="Show Weekend tasks" aria-pressed="false"><span>WEEKEND</span><small>Saturday and Sunday</small></button>
+        </nav>
+            <div id="weekdaySelector" class="task-day-selector" aria-label="Choose a weekday" role="group" hidden></div>
+            <div id="weekendSelector" class="task-day-selector" aria-label="Choose a weekend day" role="group" hidden></div>
+            <div id="selectedDaySummary" class="selected-day-summary" hidden><span id="selectedDaySummaryText">0/0 tasks completed · 0%</span><div class="selected-day-track"><span id="selectedDaySummaryFill"></span></div></div>
+            <div class="task-toolbar">
+                <div class="filter-tabs" role="group" aria-label="Filter tasks">
+                    <button class="filter-btn active" data-filter="all" aria-pressed="true" type="button">All <span id="allFilterCount">0</span></button>
+                    <button class="filter-btn" data-filter="active" aria-pressed="false" type="button">Active <span id="activeFilterCount">0</span></button>
+                    <button class="filter-btn" data-filter="completed" aria-pressed="false" type="button">Completed <span id="completedFilterCount">0</span></button>
+                </div>
+                <button class="text-button clear-btn" id="clearCompleted" type="button">Clear completed</button>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span>DAILY PROGRESS</span>
+                    <span id="progressLabel">0% completed</span>
+                </div>
+                <div class="progress-track" id="progressTrack" role="progressbar" aria-label="Task completion progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <ul class="task-list" id="taskList" aria-label="Your tasks"></ul>
+
+            <div class="empty-state" id="emptyState">
+                <span class="empty-icon">✓</span>
+                <h3 id="emptyTitle">A fresh start.</h3>
+                <p id="emptyDescription">Add your first task and make today count.</p>
+            </div>
+
+            <footer class="list-footer">
+                <span><span class="status-dot"></span> YOUR PROGRESS, YOUR PACE</span>
+                <span id="footerSummary">Nothing on the list just yet.</span>
+            </footer>
+        </section>
+
+        <!-- Daily Progress -->
+        <section class="daily-progress-card" id="dailyProgressCard" hidden aria-labelledby="dailyProgressTitle">
+            <header class="daily-progress-header"><div><span class="eyebrow">YOUR MOMENTUM</span><h2 id="dailyProgressTitle">Daily Progress</h2><div class="daily-reset-actions"><button id="testDailyReset" type="button" class="btn btn-outline btn-small" aria-label="Test daily reset">Test daily reset</button></div></div><label class="chart-type-inline" for="dailyChartType">Chart type <select id="dailyChartType" class="chart-type-select"><option value="bar">Bar</option><option value="line">Line</option><option value="pie">Pie</option><option value="donut">Donut</option></select></label></header>
+            <div class="daily-progress-stats"><div><span>Completed today</span><strong id="dailyCompletedToday">0</strong></div><div><span>Today's completion</span><strong id="dailyPercentToday">0%</strong></div><div><span>vs yesterday</span><strong id="dailyComparisonBadge" class="comparison-badge neutral">No change</strong></div></div>
+            <div class="daily-progress-track"><div id="dailyPercentFill" class="progress-fill"></div></div>
+            <div id="dailyChart" class="daily-chart" role="img" aria-label="Completed tasks over the last seven days"></div>
+        </section>
+        <p class="dashboard-motto">STAY CONSISTENT. KEEP MOVING FORWARD.</p>
+    </main>
+
+
+
+    <!-- Profile panel: Profile, Weekly Progress, Reminder, Theme, Clear Data, Account -->
+    <div class="profile-backdrop" id="profileBackdrop" hidden></div>
+    <aside class="profile-panel" id="profilePanel" aria-label="Profile menu" aria-hidden="true" inert>
+        <div class="profile-panel-header">
+            <div><span class="eyebrow">YOUR ACCOUNT</span><h2>Profile &amp; settings</h2></div>
+            <button class="icon-button" id="closeProfilePanel" type="button" aria-label="Close profile panel">×</button>
+        </div>
+
+        <!-- Profile Photo -->
+        <section class="profile-box" aria-labelledby="profileBoxTitle">
+            <h3 id="profileBoxTitle">Profile</h3>
+            <div class="profile-photo-identity">
+                <div class="profile-photo-frame" id="profilePhotoFrame" aria-label="Profile photo"><span id="profileAvatarLetter">T</span></div>
+                <strong id="profileDisplayName">User</strong>
+                <small id="profileDisplayEmail">you@example.com</small>
+            </div>
+            <div class="change-profile-row"><span>Change your profile</span><button class="btn btn-outline btn-small" id="editProfileBtn" type="button">Change</button></div>
+            <div id="profileEditView" class="profile-edit-view" hidden>
+                <form id="nameEditForm" class="name-edit-form" novalidate>
+                    <label for="newProfileName">Profile name</label>
+                    <input id="newProfileName" type="text" maxlength="40" autocomplete="name">
+                    <p class="field-error" id="nameEditError" role="alert"></p>
+                    <div class="inline-actions"><button class="btn btn-primary btn-small" type="submit">Save name</button><button class="btn btn-outline btn-small" id="cancelNameEdit" type="button">Cancel</button></div>
+                </form>
+                <div class="photo-options">
+                    <h4>Choose from gallery</h4>
+                    <button class="btn btn-outline btn-small gallery-label" id="chooseGalleryBtn" type="button">Choose from gallery</button>
+                    <input id="profilePhotoFile" type="file" accept="image/*" hidden aria-label="Choose a profile photo from your gallery">
+                    <p class="field-error" id="photoError" role="alert"></p>
+                    <a href="#" class="text-button reset-gallery-permission" id="resetGalleryPermission">Reset gallery permission</a>
+                    <h4>Choose an avatar</h4>
+                    <div class="avatar-tabs" role="tablist" aria-label="Avatar categories"><button type="button" class="avatar-tab selected" data-avatar-tab="men" role="tab" aria-selected="true">Men</button><button type="button" class="avatar-tab" data-avatar-tab="women" role="tab" aria-selected="false">Women</button></div>
+                    <div id="avatarChoices" class="avatar-choice-grid" role="group" aria-label="Choose an animated avatar"></div>
+                    <h4>Choose a motivation card</h4><div id="motivationChoices" class="motivation-choice-grid" role="group" aria-label="Choose a motivation card"></div>
+                    <button class="text-button remove-photo-btn" id="removeProfilePhoto" type="button">Remove photo</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Weekly Progress -->
+        <section class="profile-box weekly-box" aria-labelledby="weeklyBoxTitle">
+            <h3 id="weeklyBoxTitle" class="centered-box-title">Weekly Progress</h3>
+            <p class="panel-subtitle centered-subtitle" id="weekRangeLabel">Your week at a glance</p>
+            <button class="btn btn-primary weekly-view-btn" id="viewWeeklyProgress" type="button">View</button>
+        </section>
+
+        <!-- Reminder -->
+        <section class="profile-box reminder-box" aria-labelledby="reminderBoxTitle">
+            <h3 id="reminderBoxTitle" class="centered-box-title">Reminder</h3>
+            <div class="reminder-calendar-art" role="img" aria-label="Animated calendar with today's date highlighted and a ringing bell">
+                <svg class="reminder-calendar-svg" viewBox="0 0 220 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                    <g class="calendar-page calendar-page-back"><rect x="42" y="24" width="132" height="119" rx="13" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/></g>
+                    <g class="calendar-page calendar-page-front">
+                        <rect x="34" y="20" width="132" height="122" rx="13" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+                        <path d="M34 33a13 13 0 0 1 13-13h106a13 13 0 0 1 13 13v20H34Z" fill="var(--accent)"/>
+                        <path d="M66 12v21M134 12v21" stroke="var(--white)" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M66 12v21M134 12v21" stroke="var(--accent-soft)" stroke-width="2" stroke-linecap="round"/>
+                        <g fill="var(--muted)" opacity=".8">
+                            <circle cx="55" cy="69" r="3"/><circle cx="78" cy="69" r="3"/><circle cx="101" cy="69" r="3"/><circle cx="124" cy="69" r="3"/><circle cx="147" cy="69" r="3"/>
+                            <circle cx="55" cy="91" r="3"/><circle cx="78" cy="91" r="3"/><circle cx="124" cy="91" r="3"/><circle cx="147" cy="91" r="3"/>
+                            <circle cx="55" cy="113" r="3"/><circle cx="78" cy="113" r="3"/><circle cx="101" cy="113" r="3"/><circle cx="124" cy="113" r="3"/><circle cx="147" cy="113" r="3"/>
+                        </g>
+                        <circle class="calendar-today-pulse" cx="101" cy="91" r="10" fill="var(--accent)"/>
+                        <text x="101" y="95" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">23</text>
+                    </g>
+                    <g class="calendar-bell" transform="translate(160 94)">
+                        <path d="M0 17c4-4 4-8 4-13a9 9 0 0 1 18 0c0 5 0 9 4 13l-2 3H2Z" fill="var(--accent)" stroke="var(--accent-soft)" stroke-width="1.5"/>
+                        <path d="M9 23a4 4 0 0 0 8 0" fill="none" stroke="var(--accent-soft)" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="13" cy="-1" r="2" fill="var(--white)"/>
+                    </g>
+                    <path class="calendar-spark spark-one" d="M183 38v10m-5-5h10" stroke="var(--accent-soft)" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="calendar-spark spark-two" d="M25 93v8m-4-4h8" stroke="var(--accent-soft)" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <button class="btn btn-primary weekly-view-btn" id="openReminderCalendar" type="button">Remind Me</button>
+        </section>
+
+        <!-- Theme -->
+        <section class="profile-box theme-box" aria-labelledby="themeBoxTitle">
+            <h3 id="themeBoxTitle" class="centered-box-title">Theme</h3>
+            <div class="theme-swatches" id="themeSwatches" role="group" aria-label="Choose a color theme">
+                <button class="theme-swatch" type="button" data-theme-choice="black-red" aria-pressed="true" aria-label="Black and Red theme"><span class="swatch-colors swatch-red"></span><span>Black &amp; Red</span></button>
+                <button class="theme-swatch" type="button" data-theme-choice="white-blue" aria-pressed="false" aria-label="White and Blue theme"><span class="swatch-colors swatch-blue"></span><span>White &amp; Blue</span></button>
+                <button class="theme-swatch" type="button" data-theme-choice="black-purple" aria-pressed="false" aria-label="Black and Purple theme"><span class="swatch-colors swatch-purple"></span><span>Black &amp; Purple</span></button>
+                <button class="theme-swatch" type="button" data-theme-choice="pink-blue" aria-pressed="false" aria-label="Pink and Blue theme"><span class="swatch-colors swatch-pink-blue"></span><span>Pink &amp; Blue</span></button>
+                <button class="theme-swatch" type="button" data-theme-choice="peach-coral" aria-pressed="false" aria-label="Peach and Coral theme"><span class="swatch-colors swatch-peach-coral"></span><span>Peach &amp; Coral</span></button>
+                <button class="theme-swatch" type="button" data-theme-choice="mint-teal" aria-pressed="false" aria-label="Mint and Teal theme"><span class="swatch-colors swatch-mint-teal"></span><span>Mint &amp; Teal</span></button>
+            </div>
+        </section>
+
+        <!-- Clear Data: remove user task and progress data without changing account/profile settings. -->
+        <section class="profile-box clear-data-box" aria-labelledby="clearDataBoxTitle">
+            <h3 id="clearDataBoxTitle" class="centered-box-title">Clear Data</h3>
+            <p class="panel-subtitle centered-subtitle">Remove your tasks and progress but keep your account.</p>
+            <button class="btn clear-data-button" id="openClearData" type="button" aria-label="Clear your tasks, progress, reminders, and alarms">
+                <span aria-hidden="true">🗑</span> Clear data
+            </button>
+        </section>
+
+        <!-- Account -->
+        <section class="profile-box logout-box" aria-labelledby="accountBoxTitle">
+            <h3 id="accountBoxTitle" class="centered-box-title">Account</h3>
+            <button class="btn btn-primary profile-logout-btn" id="openAccountPage" type="button">Click to log out / delete</button>
+        </section>
+    </aside>
+
+    <!-- Weekly Progress popup -->
+    <div class="modal-overlay weekly-modal-overlay" id="weeklyModal" hidden>
+        <section class="weekly-modal" role="dialog" aria-modal="true" aria-label="Weekly Progress charts" tabindex="-1">
+            <header class="weekly-modal-header"><div><span class="eyebrow">YOUR HISTORY</span><h2>Weekly Progress</h2></div><button class="icon-button" id="closeWeeklyModal" type="button" aria-label="Close weekly progress">×</button></header>
+            <label class="chart-type-label" for="weeklyChartType">Chart type</label>
+            <select id="weeklyChartType" class="chart-type-select"><option value="bar-pie">Bar + Pie</option><option value="bar">Bar</option><option value="line">Line</option><option value="pie">Pie</option><option value="donut">Donut</option></select>
+            <div id="weeklyEmpty" class="weekly-empty">No tasks completed yet this week. Let's get started!</div>
+            <div id="weeklyCharts" class="weekly-charts" hidden>
+                <div class="chart-card" id="weeklyBarCard"><h4>Tasks completed by day</h4><div id="weeklyBarChart" class="weekly-bar-chart" role="img" aria-label="Weekly completed tasks chart"></div></div>
+                <div class="chart-card" id="weeklyDonutCard"><h4>Daily share of completed tasks</h4><div class="donut-layout"><div id="weeklyDonutChart" class="weekly-donut-chart" role="img" aria-label="Share of completed tasks by day"></div><div id="weeklyDonutLegend" class="donut-legend"></div></div></div>
+                <div class="chart-card chart-wide" id="weeklyTrendCard"><h4>Daily completion trend</h4><div id="weeklyTrendChart" class="week-line-chart" role="img" aria-label="Daily completed tasks trend for this week"></div></div>
+                <div class="weekly-stats"><div><span>Total completed this week</span><strong id="weekCompletedCount">0</strong></div><div><span>Tasks still active</span><strong id="weekActiveCount">0</strong></div><div class="weekly-percent-row"><span>Weekly completion</span><strong id="weekPercentLabel">0%</strong></div><div class="progress-track"><div class="progress-fill" id="weekPercentFill"></div></div></div>
+            </div>
+            <div id="weekComparison" class="week-comparison" hidden><h4>Week comparison</h4><div id="weekComparisonBadge" class="comparison-badge"></div><div id="weekLineChart" class="week-line-chart" role="img" aria-label="Weekly completion percentage comparison"></div></div>
+            <p class="comparison-note" id="comparisonNote">Complete 2 weeks to unlock week comparison.</p>
+            <button class="btn btn-outline weekly-close-btn" id="closeWeeklyModalBottom" type="button">Close</button>
+        </section>
+    </div>
+
+    <!-- Gallery Permission -->
+    <div class="modal-overlay" id="galleryPermissionModal" hidden>
+        <section class="confirm-modal" role="dialog" aria-modal="true" aria-label="Gallery permission" aria-labelledby="galleryPermissionTitle" tabindex="-1">
+            <h2 id="galleryPermissionTitle">Gallery access</h2>
+            <p>TO DO Daily wants to access your gallery to choose a profile photo. Allow?</p>
+            <div class="modal-actions"><button class="btn btn-primary modal-action" id="allowGalleryBtn" type="button">Allow</button><button class="btn btn-outline modal-action" id="denyGalleryBtn" type="button">Deny</button></div>
+        </section>
+    </div>
+
+    <!-- Calendar and Reminders -->
+    <div class="modal-overlay calendar-overlay" id="reminderCalendarModal" hidden>
+        <section class="calendar-modal" role="dialog" aria-modal="true" aria-labelledby="calendarTitle" aria-label="Reminder calendar" tabindex="-1">
+            <header class="weekly-modal-header"><div><span class="eyebrow">PLAN AHEAD</span><h2 id="calendarTitle">Reminders</h2></div><button class="icon-button" id="closeReminderCalendar" type="button" aria-label="Close calendar">×</button></header>
+            <div class="calendar-month-nav"><button class="btn btn-outline btn-small" id="calendarPrev" type="button" aria-label="Previous month">‹</button><h3 id="calendarMonthTitle"></h3><button class="btn btn-outline btn-small" id="calendarNext" type="button" aria-label="Next month">›</button></div>
+            <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+            <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Monthly reminder calendar"></div>
+            <div class="reminder-editor" id="reminderEditor" hidden>
+                <h3 id="reminderFormTitle">Add reminder</h3>
+                <form id="reminderForm" novalidate>
+                    <label for="reminderTitleInput">Reminder title or task</label><input id="reminderTitleInput" type="text" maxlength="160" required placeholder="What should you remember?">
+                    <label for="reminderDateInput">Date</label><input id="reminderDateInput" type="date" required>
+                    <div class="time-select-row"><label>Hour<select id="reminderHour" aria-label="Reminder hour"></select></label><label>Minute<select id="reminderMinute" aria-label="Reminder minute"></select></label><label>AM/PM<select id="reminderAmPm" aria-label="Reminder AM or PM"><option>AM</option><option>PM</option></select></label></div>
+                    <p class="field-error" id="reminderError" role="alert"></p><div class="inline-actions"><button class="btn btn-primary btn-small" type="submit">Save reminder</button><button class="btn btn-outline btn-small" id="cancelReminderEdit" type="button">Cancel</button></div>
+                </form>
+            </div>
+            <div class="reminder-lists"><section><h3 id="selectedDateReminderTitle">Reminders for selected date</h3><div id="selectedDateReminders" class="reminder-list"></div></section><section><h3>Upcoming reminders</h3><div id="upcomingReminders" class="reminder-list"></div></section></div>
+            <p class="panel-subtitle">Reminder alerts work while this website is open. Browser notifications are optional.</p>
+        </section>
+    </div>
+
+    <!-- Reminder and task timer alert -->
+    <div class="modal-overlay alert-overlay" id="alertModal" hidden>
+        <section class="confirm-modal alert-modal" role="dialog" aria-modal="true" aria-label="Reminder or task alert" aria-labelledby="alertModalTitle" tabindex="-1"><span class="modal-symbol">⏰</span><h2 id="alertModalTitle">Reminder</h2><p id="alertModalDescription"></p><div class="modal-actions" id="alertModalActions"></div></section>
+    </div>
+
+    <!-- Accessible custom confirmation modal -->
+    <div class="modal-overlay" id="confirmModal" hidden>
+        <section class="confirm-modal" role="dialog" aria-modal="true" aria-label="Confirmation dialog" aria-labelledby="modalTitle" aria-describedby="modalDescription" tabindex="-1">
+            <span class="modal-symbol" aria-hidden="true">!</span>
+            <h2 id="modalTitle">Are you sure?</h2>
+            <p id="modalDescription"></p>
+            <p id="modalError" class="field-error" role="alert"></p>
+            <div class="modal-actions" id="modalActions"></div>
+        </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+        <span class="toast-icon" id="toastIcon">✓</span>
+        <span id="toastMessage"></span>
+        <button type="button" id="toastAction" class="toast-action" hidden></button>
+    </div>
+</body>
+</html>

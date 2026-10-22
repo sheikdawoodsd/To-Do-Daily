@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0a">
+    <script>
+        try {
+            const savedTheme = localStorage.getItem("todoDaily_lastTheme");
+            if (["black-red", "white-blue", "black-purple", "pink-blue", "peach-coral", "mint-teal"].includes(savedTheme)) {
+                document.documentElement.dataset.theme = savedTheme;
+            }
+        } catch {}
+    </script>
+    <title>TO DO Daily | Organize Your Day</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x2=%221%22 y2=%221%22%3E%3Cstop stop-color=%22%23e50914%22/%3E%3Cstop offset=%221%22 stop-color=%22%23b20710%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2240%22 height=%2240%22 rx=%2210%22 fill=%22url(%23g)%22/%3E%3Cpath d=%22m10 20 7 7 14-15%22 fill=%22none%22 stroke=%22white%22 stroke-width=%223.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E">
+    <script>
+        try {
+            const savedTheme = localStorage.getItem("todoDaily_lastTheme");
+            if (["black-red", "white-blue", "black-purple", "pink-blue", "peach-coral", "mint-teal"].includes(savedTheme)) {
+                document.documentElement.dataset.theme = savedTheme;
+            }
+        } catch {}
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <script src="config.js" defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth.js" defer></script>
+</head>
+<body class="auth-page">
+    <main class="auth-layout">
+        <section class="brand-panel">
+            <a class="brand" href="index.html">
+                <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" role="img" focusable="false"><path d="M11 20.5 17.2 27 29.5 13.5" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="brand-wordmark"><span class="brand-main">TO DO</span> <span class="accent">Daily</span></span>
+            </a>
+
+            <div class="brand-content">
+                <span class="eyebrow"><span class="status-dot"></span> YOUR PLAN, YOUR RULES</span>
+                <h1>FOCUS.<br>ORGANIZE.<br><span class="gradient-text">Achieve.</span></h1>
+                <p class="mobile-hero-tagline">Organize. Focus. Achieve.</p>
+                <p>Turn your intentions into actions, your actions into habits, and your habits into the life you dream of.</p>
+
+                <div class="brand-feature">
+                    <span class="feature-icon">✓</span>
+                    <div><strong>Clarity in every day</strong><p>Keep your priorities organized.</p></div>
+                </div>
+                <div class="brand-feature">
+                    <span class="feature-icon">↗</span>
+                    <div><strong>Progress you can see</strong><p>Celebrate every small win.</p></div>
+                </div>
+                <div class="mobile-hero-actions">
+                    <a class="btn btn-primary mobile-hero-cta" href="#authForm">Login / Sign up <span aria-hidden="true">→</span></a>
+                    <a class="scroll-down-link" href="#authForm"><span class="scroll-down-arrow" aria-hidden="true">↓</span><span>Scroll down</span></a>
+                </div>
+            </div>
+
+            <p class="brand-footer"> MORE PROGRESS. MORE CONTROL. MORE SUCCESS </p>
+        </section>
+
+        <section class="auth-side">
+            <div class="auth-card">
+                <a class="brand mobile-brand" href="index.html">
+                    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" role="img" focusable="false"><path d="M11 20.5 17.2 27 29.5 13.5" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="brand-wordmark"><span class="brand-main">TO DO</span> <span class="accent">Daily</span></span>
+                </a>
+
+                <header class="auth-heading">
+                    <span class="eyebrow">WELCOME TO YOUR SPACE TO ACHIEVE DAILY SUCCESS</span>
+                    <h2 id="formTitle">WELCOME BACK!</h2>
+                    <p id="formSubtitle">Sign in and get back in your flow.</p>
+                </header>
+
+                <div class="auth-tabs" role="tablist" aria-label="Account options">
+                    <button class="auth-tab active" id="loginTab" type="button" role="tab" aria-selected="true">Login</button>
+                    <button class="auth-tab" id="signupTab" type="button" role="tab" aria-selected="false">Create Account</button>
+                </div>
+
+                <form id="authForm" novalidate>
+                    <div class="field-group">
+                        <label for="email">Email address</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">✉</span>
+                            <input id="email" name="email" type="email" placeholder="yourname@gmail.com" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+                        </div>
+                        <p class="field-error" id="emailError" aria-live="polite"></p>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">♙</span>
+                            <input id="password" name="password" type="password" placeholder="At least 6 characters" autocomplete="current-password" minlength="6" required>
+                            <button class="password-toggle" id="passwordToggle" type="button" aria-label="Show password">Show</button>
+                        </div>
+                        <p class="field-error" id="passwordError" aria-live="polite"></p>
+                    </div>
+
+                    <div class="field-group" id="confirmGroup" hidden>
+                        <label for="confirmPassword">Confirm password</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">♙</span>
+                            <input id="confirmPassword" type="password" placeholder="Enter your password again" autocomplete="new-password">
+                            <button class="password-toggle" id="confirmToggle" type="button">Show</button>
+                        </div>
+                        <p class="field-error" id="confirmError" aria-live="polite"></p>
+                    </div>
+
+                    <label class="remember-row" id="rememberRow">
+                        <input id="rememberMe" type="checkbox" checked>
+                        <span>Remember me on this device</span>
+                    </label>
+
+                    <p class="form-error" id="formError" role="alert"></p>
+
+                    <button class="btn btn-primary auth-submit" id="submitBtn" type="submit">
+                        <span id="submitText">Sign in</span><span>→</span>
+                    </button>
+                </form>
+
+                <div class="auth-divider"><span>OR CONTINUE WITH</span></div>
+                <button class="google-signin-btn" id="googleSignInBtn" type="button"><span class="google-g" aria-hidden="true">G</span><span>Continue with Google</span></button>
+                <p class="google-note" id="googleSignInNote" role="status"></p>
+                <p class="auth-switch" id="authSwitch">
+                    New to TO DO Daily?
+                    <button id="switchMode" type="button">Create an account</button>
+                </p>
+
+                <p class="security-note"><span>●</span> Email verification · Browser-based account data</p>
+                <p class="page-copyright">© 2026 TO DO DAILY</p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
