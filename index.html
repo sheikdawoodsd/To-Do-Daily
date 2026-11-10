@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0a0a0a">
     <script>
+        // Already signed in on this device: go straight in, before the login page is drawn.
+        try {
+            const sessionEmail = localStorage.getItem("todoDaily_session") || sessionStorage.getItem("todoDaily_session");
+            const savedAccount = JSON.parse(localStorage.getItem("todoDaily_accounts") || "{}")[sessionEmail];
+            if (sessionEmail && savedAccount) {
+                window.location.replace(!savedAccount.verified ? "verify.html" : !savedAccount.profileComplete ? "profile.html" : "todo.html");
+            }
+        } catch {}
+    </script>
+    <script>
         try {
             const savedTheme = localStorage.getItem("todoDaily_lastTheme");
             if (["black-red", "white-blue", "black-purple", "pink-blue", "peach-coral", "mint-teal"].includes(savedTheme)) {
@@ -108,11 +118,6 @@
                         </div>
                         <p class="field-error" id="confirmError" aria-live="polite"></p>
                     </div>
-
-                    <label class="remember-row" id="rememberRow">
-                        <input id="rememberMe" type="checkbox" checked>
-                        <span>Remember me on this device</span>
-                    </label>
 
                     <p class="form-error" id="formError" role="alert"></p>
 
