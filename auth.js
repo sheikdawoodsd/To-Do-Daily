@@ -35,13 +35,11 @@ function validEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function setSession(email, remember) {
-    // Remove any old session before choosing the storage type.
-    localStorage.removeItem("todoDaily_session");
+function setSession(email) {
+    // The session is always kept on this device until the user logs out,
+    // so returning to the link on the same device never asks for login again.
     sessionStorage.removeItem("todoDaily_session");
-
-    const target = remember ? localStorage : sessionStorage;
-    target.setItem("todoDaily_session", email);
+    localStorage.setItem("todoDaily_session", email);
 }
 
 function clearErrors() {
@@ -66,7 +64,6 @@ function setMode(nextMode) {
         : "Start building better habits today.";
     $("submitText").textContent = login ? "Sign in" : "Create account";
     $("confirmGroup").hidden = login;
-    $("rememberRow").hidden = !login;
     confirmInput.required = !login;
     passwordInput.autocomplete = login ? "current-password" : "new-password";
 
@@ -109,6 +106,8 @@ if (existingEmail) {
     const existingAccount = readAccounts()[existingEmail];
 
     if (existingAccount) {
+        // Upgrade any older tab-only session so it survives closing the browser.
+        try { localStorage.setItem("todoDaily_session", existingEmail); } catch {}
         if (!existingAccount.verified) {
             window.location.replace("verify.html");
         } else if (!existingAccount.profileComplete) {
@@ -176,7 +175,7 @@ form.addEventListener("submit", event => {
 
         try {
             localStorage.setItem("todoDaily_accounts", JSON.stringify(accounts));
-            setSession(email, true);
+            setSession(email);
             window.location.href = "verify.html";
         } catch {
             $("formError").textContent =
@@ -193,7 +192,7 @@ form.addEventListener("submit", event => {
     }
 
     try {
-        setSession(email, $("rememberMe").checked);
+        setSession(email);
 
         if (!account.verified) {
             window.location.href = "verify.html";
