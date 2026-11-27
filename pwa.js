@@ -22,7 +22,8 @@ if ("serviceWorker" in navigator) {
         bar = document.createElement("div");
         bar.setAttribute("role", "dialog");
         bar.setAttribute("aria-label", "Install TO DO Daily");
-        bar.style.cssText = "position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#141414;color:#fff;border:1px solid #e50914;box-shadow:0 10px 30px rgba(0,0,0,.45);font:600 14px/1.3 Inter,system-ui,sans-serif;max-width:460px;margin:0 auto";
+        const lift = document.getElementById("chatFab") ? 88 : 12;
+        bar.style.cssText = "position:fixed;left:12px;right:12px;bottom:calc(" + lift + "px + env(safe-area-inset-bottom,0px));z-index:9999;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#141414;color:#fff;border:1px solid #e50914;box-shadow:0 10px 30px rgba(0,0,0,.45);font:600 14px/1.3 Inter,system-ui,sans-serif;max-width:460px;margin:0 auto";
         const icon = document.createElement("img");
         icon.src = "icons/icon-192.png"; icon.alt = ""; icon.width = 36; icon.height = 36;
         icon.style.cssText = "border-radius:9px;flex:none";

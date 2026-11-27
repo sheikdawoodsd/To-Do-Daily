@@ -2,6 +2,9 @@
 
 // Daily Reset: each user's completed tasks clear at the start of a new local calendar day.
 const $ = id => document.getElementById(id);
+// A "day" in this app starts at 4 AM local time, so ticks reset and one-day tasks clear at 4 AM, not midnight.
+const DAY_START_HOUR = 4;
+function appNow() { return new Date(Date.now() - DAY_START_HOUR * 3600000); }
 const THEME_KEY = "todoDaily_lastTheme";
 const THEMES = ["black-red", "white-blue", "black-purple", "pink-blue", "peach-coral", "mint-teal"];
 
@@ -45,7 +48,7 @@ function initializeDashboard(initialAccount) {
     if (!['daily','weekdays','weekend'].includes(selectedView)) selectedView = 'daily';
     const dayIds = ['mon','tue','wed','thu','fri','sat','sun'];
     const dayNames = {mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday',sun:'Sunday'};
-    let todayId = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
+    let todayId = ['sun','mon','tue','wed','thu','fri','sat'][appNow().getDay()];
     let selectedDay = localStorage.getItem(selectedDayKey) || (selectedView === 'weekend' ? (['sat','sun'].includes(todayId)?todayId:'sat') : (['sat','sun'].includes(todayId)?'mon':todayId));
     if (!dayIds.includes(selectedDay)) selectedDay = 'mon';
     if (selectedView === 'weekdays' && !dayIds.slice(0,5).includes(selectedDay)) selectedDay = ['mon','tue','wed','thu','fri'].includes(todayId) ? todayId : 'mon';
@@ -53,6 +56,9 @@ function initializeDashboard(initialAccount) {
     let storageKey = dailyStorageKey;
     const weeklyKey = `todoDaily_weekly_${email}`;
     const dailyLogKey = `todoDaily_dailyLog_${email}`;
+    const missedKey = `todoDaily_missed_${email}`;
+    const chatKey = `todoDaily_chat_${email}`;
+    const chatStateKey = `todoDaily_chatState_${email}`;
     const resetUndoSnapshotKey = `todoDaily_dailyResetUndo_${email}`;
     let dailyResetUndoSnapshot = null;
     let resetUndoTimer = null;
@@ -141,7 +147,7 @@ function initializeDashboard(initialAccount) {
     function dayShortName(id) { return ({mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'})[id] || id; }
     function renderTaskViewSelectors() {
         document.querySelectorAll('[data-task-view]').forEach(btn=>{const on=btn.dataset.taskView===selectedView;btn.classList.toggle('selected',on);btn.setAttribute('aria-pressed',String(on));});
-        $('weekdaySelector').hidden = selectedView !== 'weekdays'; $('weekendSelector').hidden = selectedView !== 'weekend'; $('selectedDaySummary').hidden = selectedView === 'daily';
+        $('weekdaySelector').hidden = selectedView !== 'weekdays'; $('weekendSelector').hidden = selectedView !== 'weekend'; $('selectedDaySummary').hidden = selectedView === 'daily'; const dailyTaskBoxEl = $('dailyTaskBox'); if (dailyTaskBoxEl) dailyTaskBoxEl.hidden = selectedView !== 'daily';
         const makeButtons=(ids)=>ids.map(id=>`<button type="button" class="task-day-button ${id===selectedDay?'selected':''} ${id===todayId?'is-today':''}" data-task-day="${id}" aria-label="Show ${dayNames[id]} tasks" aria-pressed="${id===selectedDay}">${dayShortName(id)}${id===todayId?'<i aria-hidden="true"></i>':''}</button>`).join('');
         $('weekdaySelector').innerHTML=makeButtons(dayIds.slice(0,5)); $('weekendSelector').innerHTML=makeButtons(dayIds.slice(5));
         document.querySelectorAll('[data-task-day]').forEach(btn=>btn.addEventListener('click',()=>{selectedDay=btn.dataset.taskDay;localStorage.setItem(selectedDayKey,selectedDay);switchTaskList();}));
@@ -260,7 +266,7 @@ function initializeDashboard(initialAccount) {
         const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
-    function startOfWeek(date = new Date()) {
+    function startOfWeek(date = appNow()) {
         const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         const offset = (d.getDay() + 6) % 7;
         d.setDate(d.getDate() - offset);
@@ -291,7 +297,7 @@ function initializeDashboard(initialAccount) {
         try { localStorage.setItem(dailyLogKey, JSON.stringify(log)); } catch { showToast("Could not save progress. Check browser storage.", "!"); }
     }
     function updatePlannedCount() {
-        const log = readDailyLog(); const today = dateKey(new Date());
+        const log = readDailyLog(); const today = dateKey(appNow());
         log[today] ||= { completedTaskIds: [], total: 0, planned: 0 };
         log[today].planned = Math.max(Number(log[today].planned)||0, allSavedTasks().length);
         log[today].total = Math.max(Number(log[today].total)||0, log[today].completedTaskIds.length);
@@ -299,7 +305,7 @@ function initializeDashboard(initialAccount) {
     }
     // Completed Count: the log mirrors current ticks and never becomes negative.
     function recordDailyCompletion(task, completed) {
-        const log = readDailyLog(); const today = dateKey(new Date());
+        const log = readDailyLog(); const today = dateKey(appNow());
         log[today] ||= { completedTaskIds: [], total: 0, planned: 0 };
         const entry = log[today]; entry.completedTaskIds ||= [];
         const id = String(task.id);
@@ -346,7 +352,7 @@ function initializeDashboard(initialAccount) {
 
     // Charts: bars use the day's planned count; pie colors remain fixed across themes.
     function renderBarChart(record) {
-        const todayIndex=(new Date().getDay()+6)%7;
+        const todayIndex=(appNow().getDay()+6)%7;
         const counts=dayKeys.map(k=>Number(record.daily?.[k])||0), planned=dayKeys.map(k=>Number(record.plannedDaily?.[k])||0);
         $("weeklyBarChart").innerHTML=dayLabels.map((day,i)=>{const pct=planned[i]?Math.min(100,counts[i]/planned[i]*100):0;return `<div class="bar-column"><span class="bar-count">${counts[i]}/${planned[i]}</span><div class="bar-track" aria-label="${day}: ${counts[i]} of ${planned[i]} completed"><div class="bar-value ${i===todayIndex?"is-today":""}" style="height:${pct}%"></div></div><span class="bar-day">${day}</span></div>`;}).join("");
     }
@@ -729,7 +735,7 @@ function initializeDashboard(initialAccount) {
     // Daily Progress: every metric comes from the permanent daily log, not current task ticks.
     function renderDailyProgress() {
         const card=$("dailyProgressCard");if(!card)return;card.hidden=selectedView!=='daily';if(card.hidden)return;
-        const log=readDailyLog(),dates=[];for(let i=6;i>=0;i--){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-i);dates.push(d);}
+        const log=readDailyLog(),dates=[];for(let i=6;i>=0;i--){const d=appNow();d.setHours(12,0,0,0);d.setDate(d.getDate()-i);dates.push(d);}
         const entries=dates.map(d=>log[dateKey(d)]||{completedTaskIds:[],total:0,planned:0}),counts=entries.map(countForDay),planned=entries.map(e=>Number(e.planned)||0),todayEntry=entries[6],todayCount=counts[6],todayPlanned=planned[6];
         const pct=todayPlanned?Math.min(100,Math.round(todayCount/todayPlanned*100)):0;
         $("dailyCompletedToday").textContent=todayCount;$("dailyPercentToday").textContent=`${pct}%`;$("dailyPercentFill").style.width=`${pct}%`;
@@ -770,7 +776,7 @@ function initializeDashboard(initialAccount) {
     // Daily Reset: local-calendar date check on load and every 30 seconds.
     const lastResetKey=`todoDaily_lastResetDate_${email}`;
     function resetWeekdayTasksForToday() {
-        const today=dateKey(new Date()), key=`${weekTasksKey}_${todayId}`, resetKey=`${lastResetKey}_${todayId}`;
+        const today=dateKey(appNow()), key=`${weekTasksKey}_${todayId}`, resetKey=`${lastResetKey}_${todayId}`;
         if(!dayIds.includes(todayId))return false;
         const last=localStorage.getItem(resetKey);
         if(!last){localStorage.setItem(resetKey,today);return false;}
@@ -783,8 +789,34 @@ function initializeDashboard(initialAccount) {
         if(changed)showToast(`New day, ${username}! Your ${dayNames[todayId]} tasks are fresh again. 💪`,'💪',4000);
         return changed;
     }
+    // Daily rollover (4 AM): untick the Daily Progress list, remove one-day tasks, and hand unfinished tasks to the chat assistant.
+    function rolloverDaily(force=false) {
+        const today=dateKey(appNow()), last=localStorage.getItem(lastResetKey);
+        if(!last){localStorage.setItem(lastResetKey,today);return false;}
+        if(last===today)return false;
+        const list=readTaskArray(dailyStorageKey), keep=[], missed=[];
+        list.forEach(task=>{
+            const createdToday=task.oneDay&&task.day===today&&!force;
+            if(createdToday){keep.push(task);return;}
+            if(!task.completed)missed.push(task);
+            if(task.oneDay)return;
+            if(task.completed){task.completed=false;delete task.completedAt;}
+            keep.push(task);
+        });
+        try{localStorage.setItem(dailyStorageKey,JSON.stringify(keep));}catch{return false;}
+        localStorage.setItem(lastResetKey,today);
+        queueMissed(missed,last);
+        askNextMissed();
+        updatePlannedCount();
+        return true;
+    }
     function resetForNewDay(showToastAfter=true) {
-        const now=new Date(),today=dateKey(now),resetKey=selectedView==='daily'?lastResetKey:`${lastResetKey}_${selectedDay}`;
+        if(selectedView==='daily'){
+            const rolled=rolloverDaily();
+            if(rolled){loadTasks();renderTasks();if(showToastAfter)showToast(`New day, ${username}! Your tasks are fresh again. Let's go! 💪`,"💪",4500);}
+            return rolled;
+        }
+        const now=appNow(),today=dateKey(now),resetKey=selectedView==='daily'?lastResetKey:`${lastResetKey}_${selectedDay}`;
         if(selectedView!=='daily' && todayId!==selectedDay)return false;
         const last=localStorage.getItem(resetKey);
         if(!last){localStorage.setItem(resetKey,today);updatePlannedCount();return false;}
@@ -800,7 +832,7 @@ function initializeDashboard(initialAccount) {
     function positionAddBar() {
         const previousRect = addWrap.getBoundingClientRect();
         if (tasks.length === 0) panel.insertBefore(addWrap, toolbar);
-        else panel.insertBefore(addWrap, panel.querySelector(".list-footer"));
+        else panel.insertBefore(addWrap, $("dailyTaskBox") || panel.querySelector(".list-footer"));
         const nextRect = addWrap.getBoundingClientRect();
         if (previousRect.width && nextRect.width && Math.abs(previousRect.top - nextRect.top) > 1) {
             addWrap.animate([
@@ -860,6 +892,7 @@ function initializeDashboard(initialAccount) {
             if (task.alarm && Number.isInteger(task.alarm.hour) && Number.isInteger(task.alarm.minute)) {
                 const alarmBadge=document.createElement("small");alarmBadge.className="task-time-badge task-alarm-badge";alarmBadge.textContent=`⏰ ${formatAlarmTime(task.alarm)}${task.alarm.repeatDaily?" · Daily":""}`;copy.appendChild(alarmBadge);
             }
+            if (task.oneDay) { const dayBadge=document.createElement("small"); dayBadge.className="task-time-badge task-oneday-badge"; dayBadge.textContent="📅 Today only · clears at 4 AM"; copy.appendChild(dayBadge); }
             const alarmButton=document.createElement("button");alarmButton.type="button";alarmButton.className="task-alarm-button";alarmButton.textContent="⏰";alarmButton.setAttribute("aria-label",`Set alarm for ${task.text}`);alarmButton.title="Set or change alarm";alarmButton.addEventListener("click",()=>openAlarmEditor(task.id));
             const remove = document.createElement("button");
             remove.type = "button";
@@ -967,6 +1000,153 @@ function initializeDashboard(initialAccount) {
     });
     taskInput.addEventListener("input", () => { taskError.textContent = ""; });
 
+    // Daily Task: a plan for today only. It sits in the Daily Progress list and is removed at the 4 AM rollover.
+    const dailyBox = document.createElement("div");
+    dailyBox.className = "daily-task-box";
+    dailyBox.id = "dailyTaskBox";
+    dailyBox.hidden = selectedView !== "daily";
+    dailyBox.innerHTML = `
+        <button type="button" class="btn btn-outline daily-task-toggle" id="dailyTaskToggle" aria-expanded="false" aria-controls="dailyTaskBody"><span>📅 Daily Task</span><span class="daily-task-caret" aria-hidden="true">▾</span></button>
+        <div class="daily-task-body" id="dailyTaskBody" aria-hidden="true" inert>
+            <div class="daily-task-inner">
+                <form id="dailyTaskForm" class="daily-task-form" novalidate>
+                    <label for="dailyTaskInput">What's your plan?</label>
+                    <div class="daily-task-row"><input id="dailyTaskInput" type="text" maxlength="200" placeholder="Type your plan for today" autocomplete="off"><button class="btn btn-primary btn-small" type="submit">Add</button></div>
+                    <p class="panel-subtitle">Only for today. It clears automatically at 4 AM.</p>
+                    <p id="dailyTaskError" class="field-error" role="alert"></p>
+                </form>
+            </div>
+        </div>`;
+    panel.insertBefore(dailyBox, panel.querySelector(".list-footer"));
+    $("dailyTaskToggle").addEventListener("click", () => {
+        const open = dailyBox.classList.toggle("open");
+        $("dailyTaskToggle").setAttribute("aria-expanded", String(open));
+        $("dailyTaskBody").setAttribute("aria-hidden", String(!open));
+        $("dailyTaskBody").inert = !open;
+        if (open) setTimeout(() => $("dailyTaskInput").focus({ preventScroll: true }), 280);
+    });
+    $("dailyTaskInput").addEventListener("input", () => { $("dailyTaskError").textContent = ""; });
+    $("dailyTaskForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const input = $("dailyTaskInput");
+        const text = input.value.trim().replace(/\s+/g, " ");
+        if (!text) { $("dailyTaskError").textContent = "Please type your plan first."; input.focus({ preventScroll: true }); return; }
+        if (selectedView !== "daily") return;
+        const id = window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        tasks.push({ id, text, completed: false, oneDay: true, day: dateKey(appNow()) });
+        if (!saveTasks()) { tasks.pop(); return; }
+        filter = "all";
+        renderTasks();
+        input.value = "";
+        input.focus({ preventScroll: true });
+        showToast("Added for today only. It clears at 4 AM.", "📅", 2600);
+    });
+
+    // Chat assistant: asks why a task was missed after the 4 AM rollover and keeps the whole history.
+    let chatUi = null;
+    const makeId = () => window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    function readJson(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key) || "null"); return v ?? fallback; } catch { return fallback; } }
+    function writeJson(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
+    function readMissed() { const v = readJson(missedKey, []); return Array.isArray(v) ? v.filter(m => m && typeof m.id === "string" && typeof m.text === "string") : []; }
+    function readChat() { const v = readJson(chatKey, []); return Array.isArray(v) ? v.filter(m => m && (m.role === "bot" || m.role === "user") && typeof m.text === "string") : []; }
+    function readChatState() { const v = readJson(chatStateKey, {}); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; }
+    function dayWord(day) {
+        const y = appNow(); y.setDate(y.getDate() - 1);
+        if (day === dateKey(y)) return "yesterday";
+        if (day === dateKey(appNow())) return "today";
+        return "on " + new Date(`${day}T12:00:00`).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" });
+    }
+    function queueMissed(items, day) {
+        if (!items.length) return;
+        const list = readMissed();
+        items.forEach(task => {
+            const id = `${task.id}:${day}`;
+            if (!list.some(m => m.id === id)) list.push({ id, text: task.text, day, oneDay: !!task.oneDay, asked: false, reason: null });
+        });
+        writeJson(missedKey, list.slice(-100));
+    }
+    function unansweredCount() { return readMissed().filter(m => m.reason === null).length; }
+    function addChatMessage(role, text) {
+        const list = readChat();
+        list.push({ id: makeId(), role, text, ts: Date.now() });
+        writeJson(chatKey, list.slice(-200));
+        refreshChat();
+    }
+    function askNextMissed() {
+        const state = readChatState(), list = readMissed();
+        if (state.activeId && list.some(m => m.id === state.activeId && m.reason === null)) return;
+        const next = list.find(m => m.reason === null && !m.asked);
+        if (!next) { if (state.activeId) { delete state.activeId; writeJson(chatStateKey, state); } refreshChat(); return; }
+        next.asked = true; writeJson(missedKey, list);
+        state.activeId = next.id; writeJson(chatStateKey, state);
+        addChatMessage("bot", `Hi ${username}, ${dayWord(next.day)} you didn't complete “${next.text}”. Why didn't you finish it? Please give me a reason.`);
+    }
+    function handleUserReply(text) {
+        const state = readChatState(), list = readMissed();
+        const active = list.find(m => m.id === state.activeId && m.reason === null);
+        addChatMessage("user", text);
+        if (!active) { addChatMessage("bot", `Thanks, ${username}! Nothing is waiting for a reason right now. If you miss a task, I'll check in with you here the next morning. Keep going! 💪`); return; }
+        active.reason = text; active.answeredAt = Date.now(); writeJson(missedKey, list);
+        delete state.activeId; writeJson(chatStateKey, state);
+        addChatMessage("bot", `Thanks for the reason, ${username}. Please don't skip a task like “${active.text}” again, because your daily progress can break and slow you down. 💪`);
+        addChatMessage("bot", "Thank you for your reply.");
+        askNextMissed();
+    }
+    function refreshChat() {
+        if (!chatUi) return;
+        const badge = chatUi.badge, count = unansweredCount();
+        badge.textContent = count > 9 ? "9+" : String(count);
+        badge.hidden = count === 0;
+        chatUi.fab.classList.toggle("has-unread", count > 0);
+        chatUi.fab.setAttribute("aria-label", count ? `Open chat assistant, ${count} waiting` : "Open chat assistant");
+        const log = chatUi.log, stick = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+        log.replaceChildren();
+        readChat().forEach(message => {
+            const bubble = document.createElement("div");
+            bubble.className = `chat-msg chat-${message.role}`;
+            bubble.textContent = message.text;
+            log.appendChild(bubble);
+        });
+        if (stick || !chatUi.panel.hidden) log.scrollTop = log.scrollHeight;
+    }
+    function openChat() {
+        if (!readChat().length) addChatMessage("bot", `Hi ${username}! I'm your daily coach. If you miss a task, I'll check in here the next morning and ask why.`);
+        askNextMissed();
+        chatUi.panel.hidden = false;
+        chatUi.fab.setAttribute("aria-expanded", "true");
+        refreshChat();
+        setTimeout(() => chatUi.input.focus({ preventScroll: true }), 50);
+    }
+    function closeChat() {
+        if (!chatUi) return;
+        chatUi.panel.hidden = true;
+        chatUi.fab.setAttribute("aria-expanded", "false");
+    }
+    function buildChatUI() {
+        const fab = document.createElement("button");
+        fab.type = "button"; fab.id = "chatFab"; fab.className = "chat-fab";
+        fab.setAttribute("aria-label", "Open chat assistant"); fab.setAttribute("aria-expanded", "false"); fab.setAttribute("aria-controls", "chatPanel");
+        fab.innerHTML = `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.5-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11.5h7M8.5 14.5h4.5"/></svg><span class="chat-badge" id="chatBadge" hidden>0</span>`;
+        const chatPanel = document.createElement("section");
+        chatPanel.id = "chatPanel"; chatPanel.className = "chat-panel"; chatPanel.hidden = true;
+        chatPanel.setAttribute("role", "dialog"); chatPanel.setAttribute("aria-label", "Daily coach chat");
+        chatPanel.innerHTML = `<header class="chat-header"><div><strong>Daily Coach</strong><small>Checks in on tasks you miss</small></div><button type="button" class="icon-button chat-close" aria-label="Close chat">×</button></header><div class="chat-log" id="chatLog" aria-live="polite"></div><form class="chat-form" id="chatForm" novalidate><input id="chatInput" type="text" maxlength="500" placeholder="Type your reply…" autocomplete="off" aria-label="Type your reply"><button class="chat-send" type="submit" aria-label="Send">➤</button></form>`;
+        document.body.append(fab, chatPanel);
+        chatUi = { fab, panel: chatPanel, badge: fab.querySelector(".chat-badge"), log: chatPanel.querySelector(".chat-log"), input: chatPanel.querySelector("#chatInput") };
+        fab.addEventListener("click", () => chatUi.panel.hidden ? openChat() : closeChat());
+        chatPanel.querySelector(".chat-close").addEventListener("click", closeChat);
+        chatPanel.querySelector("#chatForm").addEventListener("submit", event => {
+            event.preventDefault();
+            const text = chatUi.input.value.trim().replace(/\s+/g, " ");
+            if (!text) return;
+            chatUi.input.value = "";
+            handleUserReply(text);
+            chatUi.input.focus({ preventScroll: true });
+        });
+        document.addEventListener("keydown", event => { if (event.key === "Escape" && !chatUi.panel.hidden) closeChat(); });
+        refreshChat();
+    }
+
     // Clock: one-line local date and 12-hour time, updated every second.
     function updateLiveClock() {
         const now = new Date();
@@ -1067,9 +1247,10 @@ function initializeDashboard(initialAccount) {
         showToast(`Completed tasks cleared, ${username}!`);
     });
 
+    const dailyRolledAtLoad = rolloverDaily();
     storageKey = activeListKey();
     loadTasks();
-    const resetHappened = resetForNewDay(false);
+    const resetHappened = selectedView === 'daily' ? dailyRolledAtLoad : resetForNewDay(false);
     resetWeekdayTasksForToday();
     const testResetButton = $("testDailyReset");
     const undoResetButton = $("undoDailyReset");
@@ -1080,6 +1261,7 @@ function initializeDashboard(initialAccount) {
             dailyLogKey,
             weeklyKey,
             lastResetKey,
+            missedKey, chatKey, chatStateKey,
             ...dayIds.map(day => `${lastResetKey}_${day}`)
         ])];
     }
@@ -1125,9 +1307,12 @@ function initializeDashboard(initialAccount) {
         dailyResetUndoSnapshot = { createdAt: Date.now(), expiresAt: Date.now() + 10000, values };
         localStorage.setItem(resetUndoSnapshotKey, JSON.stringify(dailyResetUndoSnapshot));
         showUndoResetButton();
-        const yesterday = new Date();
+        const yesterday = appNow();
         yesterday.setDate(yesterday.getDate() - 1);
         localStorage.setItem(lastResetKey, dateKey(yesterday));
+        rolloverDaily(true);
+        loadTasks();
+        renderTasks();
         resetForNewDay(false);
         renderDailyProgress();
         showToast("Daily reset done", "✓", 10000, restoreDailyResetSnapshot);
@@ -1146,9 +1331,10 @@ function initializeDashboard(initialAccount) {
     } catch { localStorage.removeItem(resetUndoSnapshotKey); }
     testResetButton?.addEventListener("click", beginDailyResetTest);
     undoResetButton?.addEventListener("click", restoreDailyResetSnapshot);
+    buildChatUI();
     renderTasks();
     if (resetHappened) showToast(`New day, ${username}! Your tasks are fresh again. Let's go! 💪`, "💪", 4500);
-    setInterval(() => { todayId = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]; renderTaskViewSelectors(); resetForNewDay(true); resetWeekdayTasksForToday(); }, 30000);
+    setInterval(() => { todayId = ['sun','mon','tue','wed','thu','fri','sat'][appNow().getDay()]; renderTaskViewSelectors(); const rolled = rolloverDaily(); if (rolled && selectedView === 'daily') { loadTasks(); renderTasks(); showToast(`New day, ${username}! Your tasks are fresh again. Let's go! 💪`, "💪", 4500); } else if (selectedView !== 'daily') resetForNewDay(true); resetWeekdayTasksForToday(); }, 30000);
     setInterval(checkTaskTimers, 1000);
     initializeTaskAlarms(); requestAlarmNotifications(); setInterval(checkTaskAlarms,1000);
 
@@ -1170,6 +1356,7 @@ function initializeDashboard(initialAccount) {
             dailyStorageKey, weekTasksKey, ...dayIds.map(day => `${weekTasksKey}_${day}`),
             weeklyKey, dailyLogKey, selectedViewKey, selectedDayKey,
             weeklyChartKey, dailyChartKey, remindersKey, customQuotesKey,
+            missedKey, chatKey, chatStateKey,
             lastResetKey, ...dayIds.map(day => `${lastResetKey}_${day}`),
             `todoDaily_alarmNotifPrompt_${email}`, `todoDaily_notificationPrompt_${email}`
         ];
