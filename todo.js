@@ -5,6 +5,7 @@ const $ = id => document.getElementById(id);
 // A "day" in this app starts at 4 AM local time, so ticks reset and one-day tasks clear at 4 AM, not midnight.
 const DAY_START_HOUR = 4;
 function appNow() { return new Date(Date.now() - DAY_START_HOUR * 3600000); }
+const ALARM_SVG = '<svg class="alarm-svg" viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2"/><path d="M4.5 5.5 7.5 3M19.5 5.5 16.5 3"/></svg>';
 const THEME_KEY = "todoDaily_lastTheme";
 const THEMES = ["black-red", "white-blue", "black-purple", "pink-blue", "peach-coral", "mint-teal"];
 
@@ -89,7 +90,7 @@ function initializeDashboard(initialAccount) {
         <form id="taskForm" class="add-task-form">
             <span class="add-input-icon" aria-hidden="true">＋</span>
             <input id="taskInput" type="text" maxlength="200" placeholder="What needs to get done?" aria-label="New task" autocomplete="off">
-            <button class="btn btn-outline task-time-toggle" id="taskTimeToggle" type="button" aria-expanded="false">⏰ Set time</button>
+            <button class="btn btn-outline task-time-toggle" id="taskTimeToggle" type="button" aria-expanded="false">${ALARM_SVG} Set time</button>
             <button class="btn btn-primary add-task-btn" type="submit">＋ Add Task</button>
         </form>
         <div class="task-time-options" id="taskTimeOptions" hidden><label><span>Hour</span><select id="taskHour" aria-label="Task reminder hour"></select></label><label><span>Minute</span><select id="taskMinute" aria-label="Task reminder minute"></select></label><label><span>AM/PM</span><select id="taskAmPm" aria-label="Task reminder AM or PM"><option>AM</option><option>PM</option></select></label><small id="taskTomorrowNote" class="panel-subtitle"></small></div>
@@ -726,7 +727,7 @@ function initializeDashboard(initialAccount) {
         const now=Date.now();let changed=false;
         for(const reminder of reminders){if(reminder.notified||reminder.missedNotified)continue;const when=Number(reminder.timestamp);if(when>now)continue;
             if(when>=reminderPageOpenedAt){reminder.notified=true;changed=true;notifyBrowser(`Reminder: ${reminder.title}`,"It's time for your reminder.");$("alertModalTitle").textContent=`Reminder: ${reminder.title}`;$("alertModalDescription").textContent="It's time for your reminder.";$("alertModalActions").replaceChildren();const close=document.createElement("button");close.type="button";close.className="btn btn-primary modal-action";close.textContent="Got it";close.addEventListener("click",()=>{$("alertModal").hidden=true;});$("alertModalActions").appendChild(close);$("alertModal").hidden=false;alertBeep();requestAnimationFrame(()=>close.focus());}
-            else {reminder.missedNotified=true;reminder.notified=true;changed=true;showToast(`Missed reminder: ${reminder.title}`,"⏰",5000);}
+            else {reminder.missedNotified=true;reminder.notified=true;changed=true;showToast(`Missed reminder: ${reminder.title}`,"!",5000);}
         }
         if(changed){saveReminders();if(!$("reminderCalendarModal").hidden)renderReminderLists();}
     }
@@ -734,7 +735,7 @@ function initializeDashboard(initialAccount) {
 
     // Daily Progress: every metric comes from the permanent daily log, not current task ticks.
     function renderDailyProgress() {
-        const card=$("dailyProgressCard");if(!card)return;card.hidden=selectedView!=='daily';if(card.hidden)return;
+        const card=$("dailyProgressCard");if(!card)return;card.hidden=false;
         const log=readDailyLog(),dates=[];for(let i=6;i>=0;i--){const d=appNow();d.setHours(12,0,0,0);d.setDate(d.getDate()-i);dates.push(d);}
         const entries=dates.map(d=>log[dateKey(d)]||{completedTaskIds:[],total:0,planned:0}),counts=entries.map(countForDay),planned=entries.map(e=>Number(e.planned)||0),todayEntry=entries[6],todayCount=counts[6],todayPlanned=planned[6];
         const pct=todayPlanned?Math.min(100,Math.round(todayCount/todayPlanned*100)):0;
@@ -885,15 +886,15 @@ function initializeDashboard(initialAccount) {
             text.textContent = task.text;
             copy.appendChild(text);
             if (Number.isFinite(Number(task.scheduledAt))) {
-                const timerBadge = document.createElement("small"); timerBadge.className="task-time-badge"; timerBadge.textContent=`⏰ ${timeLabel(new Date(Number(task.scheduledAt)))}`; copy.appendChild(timerBadge);
+                const timerBadge = document.createElement("small"); timerBadge.className="task-time-badge"; timerBadge.innerHTML=ALARM_SVG;timerBadge.append(document.createTextNode(` ${timeLabel(new Date(Number(task.scheduledAt)))}`)); copy.appendChild(timerBadge);
                 if (Number(task.scheduledAt) > Date.now() && new Date(Number(task.scheduledAt)).toDateString() !== new Date().toDateString()) { const tomorrowNote=document.createElement("small"); tomorrowNote.className="task-reset-countdown"; tomorrowNote.textContent=`Set for tomorrow, ${timeLabel(new Date(Number(task.scheduledAt)))}`; copy.appendChild(tomorrowNote); }
             }
 
             if (task.alarm && Number.isInteger(task.alarm.hour) && Number.isInteger(task.alarm.minute)) {
-                const alarmBadge=document.createElement("small");alarmBadge.className="task-time-badge task-alarm-badge";alarmBadge.textContent=`⏰ ${formatAlarmTime(task.alarm)}${task.alarm.repeatDaily?" · Daily":""}`;copy.appendChild(alarmBadge);
+                const alarmBadge=document.createElement("small");alarmBadge.className="task-time-badge task-alarm-badge";alarmBadge.innerHTML=ALARM_SVG;alarmBadge.append(document.createTextNode(` ${formatAlarmTime(task.alarm)}${task.alarm.repeatDaily?" · Daily":""}`));copy.appendChild(alarmBadge);
             }
-            if (task.oneDay) { const dayBadge=document.createElement("small"); dayBadge.className="task-time-badge task-oneday-badge"; dayBadge.textContent="📅 Today only · clears at 4 AM"; copy.appendChild(dayBadge); }
-            const alarmButton=document.createElement("button");alarmButton.type="button";alarmButton.className="task-alarm-button";alarmButton.textContent="⏰";alarmButton.setAttribute("aria-label",`Set alarm for ${task.text}`);alarmButton.title="Set or change alarm";alarmButton.addEventListener("click",()=>openAlarmEditor(task.id));
+            if (task.oneDay) { const dayBadge=document.createElement("small"); dayBadge.className="task-time-badge task-oneday-badge"; dayBadge.textContent="Today only · clears at 4 AM"; copy.appendChild(dayBadge); }
+            const alarmButton=document.createElement("button");alarmButton.type="button";alarmButton.className="task-alarm-button"+(task.alarm?" has-alarm":"");alarmButton.innerHTML=ALARM_SVG;alarmButton.setAttribute("aria-label",`Set alarm for ${task.text}`);alarmButton.title="Set or change alarm";alarmButton.addEventListener("click",()=>openAlarmEditor(task.id));
             const remove = document.createElement("button");
             remove.type = "button";
             remove.className = "delete-task";
@@ -1006,13 +1007,12 @@ function initializeDashboard(initialAccount) {
     dailyBox.id = "dailyTaskBox";
     dailyBox.hidden = selectedView !== "daily";
     dailyBox.innerHTML = `
-        <button type="button" class="btn btn-outline daily-task-toggle" id="dailyTaskToggle" aria-expanded="false" aria-controls="dailyTaskBody"><span>📅 Daily Task</span><span class="daily-task-caret" aria-hidden="true">▾</span></button>
+        <button type="button" class="daily-task-toggle" id="dailyTaskToggle" aria-expanded="false" aria-controls="dailyTaskBody"><span class="daily-task-label">Daily Task</span><span class="daily-task-caret" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></button>
         <div class="daily-task-body" id="dailyTaskBody" aria-hidden="true" inert>
             <div class="daily-task-inner">
                 <form id="dailyTaskForm" class="daily-task-form" novalidate>
                     <label for="dailyTaskInput">What's your plan?</label>
                     <div class="daily-task-row"><input id="dailyTaskInput" type="text" maxlength="200" placeholder="Type your plan for today" autocomplete="off"><button class="btn btn-primary btn-small" type="submit">Add</button></div>
-                    <p class="panel-subtitle">Only for today. It clears automatically at 4 AM.</p>
                     <p id="dailyTaskError" class="field-error" role="alert"></p>
                 </form>
             </div>
@@ -1039,7 +1039,7 @@ function initializeDashboard(initialAccount) {
         renderTasks();
         input.value = "";
         input.focus({ preventScroll: true });
-        showToast("Added for today only. It clears at 4 AM.", "📅", 2600);
+        showToast("Added for today only. It clears at 4 AM.", "✓", 2600);
     });
 
     // Chat assistant: asks why a task was missed after the 4 AM rollover and keeps the whole history.
@@ -1081,16 +1081,108 @@ function initializeDashboard(initialAccount) {
         state.activeId = next.id; writeJson(chatStateKey, state);
         addChatMessage("bot", `Hi ${username}, ${dayWord(next.day)} you didn't complete “${next.text}”. Why didn't you finish it? Please give me a reason.`);
     }
-    function handleUserReply(text) {
-        const state = readChatState(), list = readMissed();
-        const active = list.find(m => m.id === state.activeId && m.reason === null);
+    let chatBusy = false, chatTyping = false;
+    function activeMissed() {
+        const state = readChatState();
+        return readMissed().find(m => m.id === state.activeId && m.reason === null) || null;
+    }
+    function recordReason(active, text) {
+        const list = readMissed(), entry = list.find(m => m.id === active.id);
+        if (entry) { entry.reason = text; entry.answeredAt = Date.now(); writeJson(missedKey, list); }
+        const state = readChatState(); delete state.activeId; writeJson(chatStateKey, state);
+    }
+    function chatContext(active) {
+        const brief = list => list.slice(0, 40).map((t, i) => ({ n: i + 1, text: t.text.slice(0, 120), done: t.completed, todayOnly: !!t.oneDay }));
+        const byDay = ids => Object.fromEntries(ids.map(d => [d, brief(readTaskArray(`${weekTasksKey}_${d}`)).map(({ text, done }) => ({ text, done }))]));
+        return {
+            name: username,
+            now: new Date().toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit" }),
+            today: dateKey(appNow()), dayStartsAt: "4 AM",
+            daily: brief(readTaskArray(dailyStorageKey)),
+            weekdays: byDay(dayIds.slice(0, 5)), weekend: byDay(dayIds.slice(5)),
+            pendingCheckIn: active ? { task: active.text, when: dayWord(active.day) } : null
+        };
+    }
+    async function askAssistant(active) {
+        const messages = readChat().slice(-14).map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text }));
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 25000);
+        try {
+            const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages, context: chatContext(active) }), signal: controller.signal });
+            if (!response.ok) return null;
+            const data = await response.json();
+            if (!data || typeof data.reply !== "string" || !data.reply.trim()) return null;
+            return { reply: data.reply.trim(), actions: Array.isArray(data.actions) ? data.actions.slice(0, 5) : [], reasonGiven: data.reasonGiven === true };
+        } catch { return null; } finally { clearTimeout(timer); }
+    }
+    // Task changes the assistant asks for. Each one is checked here before anything is saved.
+    function applyChatActions(actions) {
+        const notes = [];
+        let changed = false;
+        const clean = v => typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, 200) : "";
+        const place = (list, task, position) => {
+            let index = list.length;
+            if (position === "top") index = 0;
+            else if (Number.isInteger(Number(position)) && Number(position) > 0) index = Math.min(Number(position) - 1, list.length);
+            list.splice(index, 0, task);
+            return index + 1;
+        };
+        const addTo = (key, extra, text, position) => {
+            const list = readTaskArray(key);
+            const number = place(list, { id: makeId(), text, completed: false, ...extra }, position);
+            return writeJson(key, list) ? number : 0;
+        };
+        const completions = [];
+        actions.forEach(action => {
+            if (!action || typeof action !== "object") return;
+            const text = clean(action.text);
+            if (action.type === "add_today_task" && text) {
+                const n = addTo(dailyStorageKey, { oneDay: true, day: dateKey(appNow()) }, text, action.position);
+                if (n) { changed = true; notes.push(`Added “${text}” to Daily Progress as a today-only task, at position ${n}.`); }
+            } else if (action.type === "add_task" && text && action.list === "daily") {
+                const n = addTo(dailyStorageKey, {}, text, action.position);
+                if (n) { changed = true; notes.push(`Added “${text}” to Daily Progress at position ${n}.`); }
+            } else if (action.type === "add_task" && text && (action.list === "weekdays" || action.list === "weekend")) {
+                const pool = action.list === "weekdays" ? dayIds.slice(0, 5) : dayIds.slice(5);
+                let days = Array.isArray(action.days) ? action.days.filter(d => pool.includes(d)) : [];
+                if (!days.length) days = pool;
+                const done = days.filter(d => addTo(`${weekTasksKey}_${d}`, {}, text, action.position));
+                if (done.length) { changed = true; notes.push(`Added “${text}” to ${done.map(dayShortName).join(", ")}.`); }
+            } else if (action.type === "complete_task") {
+                completions.push({ text: text.toLowerCase(), number: Number(action.number) || 0 });
+            }
+        });
+        if (changed) { storageKey = activeListKey(); loadTasks(); renderTasks(); }
+        completions.forEach(item => {
+            const daily = readTaskArray(dailyStorageKey);
+            const found = item.number ? daily[item.number - 1] : daily.find(t => item.text && t.text.toLowerCase().includes(item.text));
+            if (!found) { notes.push("I couldn't find that task in Daily Progress."); return; }
+            if (found.completed) { notes.push(`“${found.text}” is already done.`); return; }
+            if (selectedView !== "daily") { selectedView = "daily"; localStorage.setItem(selectedViewKey, "daily"); switchTaskList(); }
+            toggleTask(found.id);
+            notes.push(`Marked “${found.text}” as done.`);
+        });
+        return notes;
+    }
+    async function handleUserReply(text) {
+        if (chatBusy) return;
         addChatMessage("user", text);
-        if (!active) { addChatMessage("bot", `Thanks, ${username}! Nothing is waiting for a reason right now. If you miss a task, I'll check in with you here the next morning. Keep going! 💪`); return; }
-        active.reason = text; active.answeredAt = Date.now(); writeJson(missedKey, list);
-        delete state.activeId; writeJson(chatStateKey, state);
-        addChatMessage("bot", `Thanks for the reason, ${username}. Please don't skip a task like “${active.text}” again, because your daily progress can break and slow you down. 💪`);
-        addChatMessage("bot", "Thank you for your reply.");
-        askNextMissed();
+        const active = activeMissed();
+        chatBusy = true; chatTyping = true; refreshChat();
+        const result = await askAssistant(active);
+        chatBusy = false; chatTyping = false;
+        if (!result) {
+            if (active) {
+                recordReason(active, text);
+                addChatMessage("bot", `Thanks for the reason, ${username}. Please don't skip a task like “${active.text}” again, because your daily progress can break. Thank you for your reply.`);
+                askNextMissed();
+            } else addChatMessage("bot", "Sorry, I can't reach my brain right now. Please try again in a moment.");
+            return;
+        }
+        const notes = applyChatActions(result.actions);
+        if (active && result.reasonGiven) recordReason(active, text);
+        addChatMessage("bot", notes.length ? `${result.reply}\n\n${notes.map(n => "✓ " + n).join("\n")}` : result.reply);
+        if (active && result.reasonGiven) askNextMissed();
     }
     function refreshChat() {
         if (!chatUi) return;
@@ -1107,10 +1199,17 @@ function initializeDashboard(initialAccount) {
             bubble.textContent = message.text;
             log.appendChild(bubble);
         });
+        if (chatTyping) {
+            const typing = document.createElement("div");
+            typing.className = "chat-msg chat-bot chat-typing";
+            typing.setAttribute("aria-label", "Daily Coach is typing");
+            typing.innerHTML = "<span></span><span></span><span></span>";
+            log.appendChild(typing);
+        }
         if (stick || !chatUi.panel.hidden) log.scrollTop = log.scrollHeight;
     }
     function openChat() {
-        if (!readChat().length) addChatMessage("bot", `Hi ${username}! I'm your daily coach. If you miss a task, I'll check in here the next morning and ask why.`);
+        if (!readChat().length) addChatMessage("bot", `Hi ${username}! How can I help you today? What's your plan?`);
         askNextMissed();
         chatUi.panel.hidden = false;
         chatUi.fab.setAttribute("aria-expanded", "true");
@@ -1130,7 +1229,7 @@ function initializeDashboard(initialAccount) {
         const chatPanel = document.createElement("section");
         chatPanel.id = "chatPanel"; chatPanel.className = "chat-panel"; chatPanel.hidden = true;
         chatPanel.setAttribute("role", "dialog"); chatPanel.setAttribute("aria-label", "Daily coach chat");
-        chatPanel.innerHTML = `<header class="chat-header"><div><strong>Daily Coach</strong><small>Checks in on tasks you miss</small></div><button type="button" class="icon-button chat-close" aria-label="Close chat">×</button></header><div class="chat-log" id="chatLog" aria-live="polite"></div><form class="chat-form" id="chatForm" novalidate><input id="chatInput" type="text" maxlength="500" placeholder="Type your reply…" autocomplete="off" aria-label="Type your reply"><button class="chat-send" type="submit" aria-label="Send">➤</button></form>`;
+        chatPanel.innerHTML = `<header class="chat-header"><div><strong>Daily Coach</strong><small>Checks in on tasks you miss</small></div><button type="button" class="icon-button chat-close" aria-label="Close chat">×</button></header><div class="chat-log" id="chatLog" aria-live="polite"></div><form class="chat-form" id="chatForm" novalidate><input id="chatInput" type="text" maxlength="500" placeholder="Message Daily Coach…" autocomplete="off" aria-label="Message Daily Coach"><button class="chat-send" type="submit" aria-label="Send">➤</button></form>`;
         document.body.append(fab, chatPanel);
         chatUi = { fab, panel: chatPanel, badge: fab.querySelector(".chat-badge"), log: chatPanel.querySelector(".chat-log"), input: chatPanel.querySelector("#chatInput") };
         fab.addEventListener("click", () => chatUi.panel.hidden ? openChat() : closeChat());
@@ -1138,7 +1237,7 @@ function initializeDashboard(initialAccount) {
         chatPanel.querySelector("#chatForm").addEventListener("submit", event => {
             event.preventDefault();
             const text = chatUi.input.value.trim().replace(/\s+/g, " ");
-            if (!text) return;
+            if (!text || chatBusy) return;
             chatUi.input.value = "";
             handleUserReply(text);
             chatUi.input.focus({ preventScroll: true });
@@ -1193,9 +1292,9 @@ function initializeDashboard(initialAccount) {
             if(due>now || task.timeNotified && !task.snoozeUntil) return;
             task.timeNotified=true; delete task.snoozeUntil; saveTasks();
             notifyBrowser("TO DO Daily",`Time to start: ${task.text}, ${username}!`);
-            showTimedAlert(`Time to start: ${task.text}, ${username}! ⏰`,"Your scheduled task is ready.",[
+            showTimedAlert(`Time to start: ${task.text}, ${username}!`,"Your scheduled task is ready.",[
                 {label:"Done",primary:true,action:()=>{const found=tasks.find(t=>t.id===task.id);if(found&&!found.completed)toggleTask(found.id);}},
-                {label:"Snooze 5 min",action:()=>{const found=tasks.find(t=>t.id===task.id);if(found&&!found.completed){found.snoozeUntil=Date.now()+5*60*1000;saveTasks();showToast("Task snoozed for 5 minutes.","⏰");}}},
+                {label:"Snooze 5 min",action:()=>{const found=tasks.find(t=>t.id===task.id);if(found&&!found.completed){found.snoozeUntil=Date.now()+5*60*1000;saveTasks();showToast("Task snoozed for 5 minutes.","!");}}},
                 {label:"Close",action:()=>{}}
             ]);
         });
@@ -1206,10 +1305,10 @@ function initializeDashboard(initialAccount) {
     function alarmParts(a){return {hour:Number(a.hour)||0,minute:Number(a.minute)||0};}
     function stopAlarmSound(){if(alarmPulse)clearInterval(alarmPulse);if(alarmSafetyTimer)clearTimeout(alarmSafetyTimer);alarmSafetyTimer=null;alarmPulse=null;alarmOscillators.forEach(o=>{try{o.stop();}catch{}});alarmOscillators=[];}
     function ringAlarmSound(){stopAlarmSound();try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;if(!alarmAudioContext)alarmAudioContext=new Ctx();const ctx=alarmAudioContext;ctx.resume?.().catch(()=>{});const beep=()=>{if(!alarmAudioContext)return;const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=880;gain.gain.value=.16;osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.38);alarmOscillators.push(osc);};beep();alarmPulse=setInterval(beep,650);alarmSafetyTimer=setTimeout(()=>{if(activeAlarmTaskId)stopAlarmSound();},60000);}catch{}}
-    function showAlarmModal(task, missed=false){activeAlarmTaskId=task.id;const overlay=$('taskAlarmModal');overlay.hidden=false;$('taskAlarmTitle').textContent=missed?`Missed alarm: ${task.text}`:`⏰ Time for: ${task.text}, ${username}!`;$('taskAlarmDescription').textContent=missed?'This alarm time passed while TO DO Daily was closed.':'Your task alarm is ringing.';ringAlarmSound();notifyBrowser('TO DO Daily alarm',`Time for: ${task.text}, ${username}!`);requestAnimationFrame(()=>$('taskAlarmStop').focus());}
+    function showAlarmModal(task, missed=false){activeAlarmTaskId=task.id;const overlay=$('taskAlarmModal');overlay.hidden=false;$('taskAlarmTitle').textContent=missed?`Missed alarm: ${task.text}`:`Time for: ${task.text}, ${username}!`;$('taskAlarmDescription').textContent=missed?'This alarm time passed while TO DO Daily was closed.':'Your task alarm is ringing.';ringAlarmSound();notifyBrowser('TO DO Daily alarm',`Time for: ${task.text}, ${username}!`);requestAnimationFrame(()=>$('taskAlarmStop').focus());}
     function closeAlarmModal(action){const task=tasks.find(t=>t.id===activeAlarmTaskId);stopAlarmSound();$('taskAlarmModal').hidden=true;activeAlarmTaskId=null;if(!task)return;if(action==='snooze'){task.alarmSnoozeUntil=Date.now()+5*60*1000;task.alarmSnoozeDate=dateKey(new Date());if(task.alarm)task.alarm.lastFiredDate=dateKey(new Date());}else if(action==='done'){if(!task.completed)toggleTask(task.id);}else if(action==='stop'){task.alarmStoppedDate=dateKey(new Date());}if(task.alarm&&!task.alarm.repeatDaily&&action!=='snooze')delete task.alarm;saveTasks();renderTasks();}
     function openAlarmEditor(taskId){const task=tasks.find(t=>t.id===taskId);if(!task)return;const modal=$('taskAlarmEditModal');modal.hidden=false;modal.dataset.taskId=taskId;const a=task.alarm;let h=a?Number(a.hour):((new Date().getHours()+1)%24),m=a?Number(a.minute):0;const hour=((h%12)||12);$('alarmHour').value=String(hour);$('alarmMinute').value=String(m).padStart(2,'0');$('alarmAmPm').value=h>=12?'PM':'AM';$('alarmRepeatDaily').checked=a?a.repeatDaily!==false:true;requestAnimationFrame(()=>$('alarmHour').focus());}
-    function initializeTaskAlarms(){let modal=$('taskAlarmEditModal');if(!modal){modal=document.createElement('div');modal.id='taskAlarmEditModal';modal.className='modal-overlay';modal.hidden=true;modal.innerHTML=`<section class="confirm-modal" role="dialog" aria-modal="true" aria-label="Set task alarm" tabindex="-1"><h2>⏰ Task alarm</h2><div class="alarm-fields"><label>Hour<select id="alarmHour">${Array.from({length:12},(_,i)=>`<option>${i+1}</option>`).join('')}</select></label><label>Minute<select id="alarmMinute">${Array.from({length:60},(_,i)=>`<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`).join('')}</select></label><label>AM/PM<select id="alarmAmPm"><option>AM</option><option>PM</option></select></label></div><label class="alarm-repeat"><input id="alarmRepeatDaily" type="checkbox" checked> Repeat every day</label><div class="modal-actions"><button type="button" class="btn btn-primary" id="saveTaskAlarm">Save</button><button type="button" class="btn btn-outline" id="removeTaskAlarm">Remove alarm</button><button type="button" class="btn btn-outline" id="cancelTaskAlarm">Cancel</button></div></section>`;document.body.appendChild(modal);modal.addEventListener('click',e=>{if(e.target===modal)modal.hidden=true;});$('cancelTaskAlarm').addEventListener('click',()=>modal.hidden=true);$('saveTaskAlarm').addEventListener('click',()=>{try{const Ctx=window.AudioContext||window.webkitAudioContext;if(Ctx){if(!alarmAudioContext)alarmAudioContext=new Ctx();alarmAudioContext.resume?.().catch(()=>{});}}catch{}const task=tasks.find(t=>t.id===modal.dataset.taskId);if(!task)return;let hour=Number($('alarmHour').value)%12;if($('alarmAmPm').value==='PM')hour+=12;task.alarm={hour,minute:Number($('alarmMinute').value),repeatDaily:$('alarmRepeatDaily').checked,lastFiredDate:'',missedDate:'',createdAt:Date.now()};delete task.alarmSnoozeUntil;delete task.alarmStoppedDate;saveTasks();modal.hidden=true;renderTasks();});$('removeTaskAlarm').addEventListener('click',()=>{const task=tasks.find(t=>t.id===modal.dataset.taskId);if(task){delete task.alarm;delete task.alarmSnoozeUntil;saveTasks();renderTasks();}modal.hidden=true;});}}
+    function initializeTaskAlarms(){let modal=$('taskAlarmEditModal');if(!modal){modal=document.createElement('div');modal.id='taskAlarmEditModal';modal.className='modal-overlay';modal.hidden=true;modal.innerHTML=`<section class="confirm-modal" role="dialog" aria-modal="true" aria-label="Set task alarm" tabindex="-1"><h2>Task alarm</h2><div class="alarm-fields"><label>Hour<select id="alarmHour">${Array.from({length:12},(_,i)=>`<option>${i+1}</option>`).join('')}</select></label><label>Minute<select id="alarmMinute">${Array.from({length:60},(_,i)=>`<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`).join('')}</select></label><label>AM/PM<select id="alarmAmPm"><option>AM</option><option>PM</option></select></label></div><label class="alarm-repeat"><input id="alarmRepeatDaily" type="checkbox" checked> Repeat every day</label><div class="modal-actions"><button type="button" class="btn btn-primary" id="saveTaskAlarm">Save</button><button type="button" class="btn btn-outline" id="removeTaskAlarm">Remove alarm</button><button type="button" class="btn btn-outline" id="cancelTaskAlarm">Cancel</button></div></section>`;document.body.appendChild(modal);modal.addEventListener('click',e=>{if(e.target===modal)modal.hidden=true;});$('cancelTaskAlarm').addEventListener('click',()=>modal.hidden=true);$('saveTaskAlarm').addEventListener('click',()=>{try{const Ctx=window.AudioContext||window.webkitAudioContext;if(Ctx){if(!alarmAudioContext)alarmAudioContext=new Ctx();alarmAudioContext.resume?.().catch(()=>{});}}catch{}const task=tasks.find(t=>t.id===modal.dataset.taskId);if(!task)return;let hour=Number($('alarmHour').value)%12;if($('alarmAmPm').value==='PM')hour+=12;task.alarm={hour,minute:Number($('alarmMinute').value),repeatDaily:$('alarmRepeatDaily').checked,lastFiredDate:'',missedDate:'',createdAt:Date.now()};delete task.alarmSnoozeUntil;delete task.alarmStoppedDate;saveTasks();modal.hidden=true;renderTasks();});$('removeTaskAlarm').addEventListener('click',()=>{const task=tasks.find(t=>t.id===modal.dataset.taskId);if(task){delete task.alarm;delete task.alarmSnoozeUntil;saveTasks();renderTasks();}modal.hidden=true;});}}
     function activateListForAlarm(key){
         storageKey=key;
         if(key===dailyStorageKey){selectedView='daily';}
@@ -1231,7 +1330,7 @@ function initializeDashboard(initialAccount) {
         }}
     }
     function requestAlarmNotifications(){if(!('Notification'in window)||Notification.permission!=='default')return;const key=`todoDaily_alarmNotifPrompt_${email}`;if(localStorage.getItem(key))return;localStorage.setItem(key,'asked');openModal({title:'Allow alarm notifications?',description:'TO DO Daily can show a browser notification when a task alarm rings. You can still use alarms without notifications.',returnToPanel:false,buttons:[{label:'Allow notifications',primary:true,action:()=>{closeModal();Notification.requestPermission().catch(()=>{});}},{label:'Not now',action:()=>closeModal()}]});}
-    $('taskAlarmModal')||(()=>{const el=document.createElement('div');el.id='taskAlarmModal';el.className='modal-overlay alarm-ringing-overlay';el.hidden=true;el.innerHTML=`<section class="confirm-modal alarm-ringing-modal" role="dialog" aria-modal="true" aria-labelledby="taskAlarmTitle" tabindex="-1"><div class="alarm-ring-icon">⏰</div><h2 id="taskAlarmTitle">Time for your task!</h2><p id="taskAlarmDescription">Your task alarm is ringing.</p><div class="modal-actions"><button id="taskAlarmStop" type="button" class="btn btn-outline">Stop</button><button id="taskAlarmSnooze" type="button" class="btn btn-outline">Snooze 5 min</button><button id="taskAlarmDone" type="button" class="btn btn-primary">Mark as done</button></div></section>`;document.body.appendChild(el);$('taskAlarmStop').addEventListener('click',()=>closeAlarmModal('stop'));$('taskAlarmSnooze').addEventListener('click',()=>closeAlarmModal('snooze'));$('taskAlarmDone').addEventListener('click',()=>closeAlarmModal('done'));})();
+    $('taskAlarmModal')||(()=>{const el=document.createElement('div');el.id='taskAlarmModal';el.className='modal-overlay alarm-ringing-overlay';el.hidden=true;el.innerHTML=`<section class="confirm-modal alarm-ringing-modal" role="dialog" aria-modal="true" aria-labelledby="taskAlarmTitle" tabindex="-1"><div class="alarm-ring-icon">${ALARM_SVG}</div><h2 id="taskAlarmTitle">Time for your task!</h2><p id="taskAlarmDescription">Your task alarm is ringing.</p><div class="modal-actions"><button id="taskAlarmStop" type="button" class="btn btn-outline">Stop</button><button id="taskAlarmSnooze" type="button" class="btn btn-outline">Snooze 5 min</button><button id="taskAlarmDone" type="button" class="btn btn-primary">Mark as done</button></div></section>`;document.body.appendChild(el);$('taskAlarmStop').addEventListener('click',()=>closeAlarmModal('stop'));$('taskAlarmSnooze').addEventListener('click',()=>closeAlarmModal('snooze'));$('taskAlarmDone').addEventListener('click',()=>closeAlarmModal('done'));})();
 
     document.querySelectorAll("[data-filter]").forEach(button => button.addEventListener("click", () => {
         filter = button.dataset.filter;
