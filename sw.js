@@ -1,7 +1,7 @@
 "use strict";
 // Service worker: lets TO DO Daily open fast and work offline.
 // Bump CACHE_VERSION whenever the app files change.
-const CACHE_VERSION = "todo-daily-v1";
+const CACHE_VERSION = "todo-daily-v2";
 const SHELL = [
     "/", "index.html", "verify.html", "profile.html", "todo.html", "account.html",
     "style.css", "auth.js", "verify.js", "profile.js", "todo.js", "account.js", "config.js", "pwa.js",
@@ -42,17 +42,14 @@ self.addEventListener("fetch", event => {
         return;
     }
 
-    // Files (css, js, icons): serve from cache, refresh in the background.
+    // Files (css, js, icons): network first so updates reach the app on the next open; cache when offline.
     event.respondWith(
-        caches.match(request).then(hit => {
-            const fresh = fetch(request).then(response => {
-                if (response.ok) {
-                    const copy = response.clone();
-                    caches.open(CACHE_VERSION).then(cache => cache.put(request, copy));
-                }
-                return response;
-            }).catch(() => hit);
-            return hit || fresh;
-        })
+        fetch(request).then(response => {
+            if (response.ok) {
+                const copy = response.clone();
+                caches.open(CACHE_VERSION).then(cache => cache.put(request, copy));
+            }
+            return response;
+        }).catch(() => caches.match(request))
     );
 });
