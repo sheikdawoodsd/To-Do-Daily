@@ -80,8 +80,8 @@
 
         <!-- My Tasks Boxes: switch between daily, weekday, and weekend task lists. -->
         <nav class="task-view-cards" aria-label="My Tasks sections" role="group">
-            <button type="button" class="task-view-card" data-task-view="weekdays" aria-label="Show Weekdays tasks" aria-pressed="false"><span>WEEKDAYS</span><small>Monday to Friday</small></button>
             <button type="button" class="task-view-card selected" data-task-view="daily" aria-label="Show Daily Progress tasks" aria-pressed="true"><span>DAILY PROGRESS</span><small>Today's task list</small></button>
+            <button type="button" class="task-view-card" data-task-view="weekdays" aria-label="Show Weekdays tasks" aria-pressed="false"><span>WEEKDAYS</span><small>Monday to Friday</small></button>
             <button type="button" class="task-view-card" data-task-view="weekend" aria-label="Show Weekend tasks" aria-pressed="false"><span>WEEKEND</span><small>Saturday and Sunday</small></button>
         </nav>
             <div id="weekdaySelector" class="task-day-selector" aria-label="Choose a weekday" role="group" hidden></div>
@@ -289,7 +289,7 @@
 
     <!-- Reminder and task timer alert -->
     <div class="modal-overlay alert-overlay" id="alertModal" hidden>
-        <section class="confirm-modal alert-modal" role="dialog" aria-modal="true" aria-label="Reminder or task alert" aria-labelledby="alertModalTitle" tabindex="-1"><span class="modal-symbol">⏰</span><h2 id="alertModalTitle">Reminder</h2><p id="alertModalDescription"></p><div class="modal-actions" id="alertModalActions"></div></section>
+        <section class="confirm-modal alert-modal" role="dialog" aria-modal="true" aria-label="Reminder or task alert" aria-labelledby="alertModalTitle" tabindex="-1"><span class="modal-symbol"><svg class="alarm-svg" viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2"/><path d="M4.5 5.5 7.5 3M19.5 5.5 16.5 3"/></svg></span><h2 id="alertModalTitle">Reminder</h2><p id="alertModalDescription"></p><div class="modal-actions" id="alertModalActions"></div></section>
     </div>
 
     <!-- Accessible custom confirmation modal -->

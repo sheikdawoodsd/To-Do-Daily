@@ -1336,21 +1336,24 @@ body, .auth-page, .verify-page, .profile-page, .setup-page, .dashboard-page, .ac
 .google-note:empty { display:none; }
 
 /* Daily Task box: expands in place under the task list, no page jump. */
-.daily-task-box { margin-top: 16px; }
+.daily-task-box { margin-top: 18px; }
 .daily-task-box[hidden] { display: none; }
-.daily-task-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 800; letter-spacing: .04em; }
-.daily-task-caret { transition: transform .28s ease; }
+.daily-task-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border)); border-radius: 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, var(--surface)), var(--surface) 70%); color: var(--white); font: 800 13px/1 Inter, system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 14%, transparent); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.daily-task-toggle:hover, .daily-task-toggle:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 12px 30px color-mix(in srgb, var(--accent) 28%, transparent); }
+.daily-task-toggle:active { transform: scale(.99); }
+.daily-task-caret { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: #fff; transition: transform .28s ease; }
 .daily-task-box.open .daily-task-caret { transform: rotate(180deg); }
 .daily-task-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
 .daily-task-box.open .daily-task-body { grid-template-rows: 1fr; }
 .daily-task-inner { overflow: hidden; min-height: 0; }
-.daily-task-form { margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2); }
-.daily-task-form label { display: block; margin-bottom: 8px; font-weight: 800; color: var(--white); }
+.daily-task-form { margin-top: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-2); }
+.daily-task-form label { display: block; margin-bottom: 10px; font-weight: 800; color: var(--white); }
 .daily-task-row { display: flex; gap: 10px; }
-.daily-task-row input { flex: 1; min-width: 0; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--white); font: inherit; font-size: 16px; }
-.daily-task-row input:focus { outline: none; border-color: var(--accent); }
+.daily-task-row input { flex: 1; min-width: 0; padding: 13px 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--white); font: inherit; font-size: 16px; }
+.daily-task-row input::placeholder { color: #8b5cf6; opacity: 1; }
+.daily-task-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
 .task-oneday-badge { color: var(--accent); }
-@media (prefers-reduced-motion: reduce) { .daily-task-body, .daily-task-caret { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .daily-task-body, .daily-task-caret, .daily-task-toggle { transition: none; } }
 
 /* Chat assistant */
 .chat-fab { position: fixed; z-index: 50; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); width: 58px; height: 58px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--accent-gradient, var(--accent)); color: #fff; cursor: pointer; box-shadow: 0 10px 28px #0006, var(--glow, none); transition: transform .2s ease; }
@@ -1361,8 +1364,9 @@ body, .auth-page, .verify-page, .profile-page, .setup-page, .dashboard-page, .ac
 @keyframes chat-pulse { 0%, 100% { box-shadow: 0 10px 28px #0006, 0 0 0 0 #e6394655; } 50% { box-shadow: 0 10px 28px #0006, 0 0 0 10px #e6394600; } }
 .chat-panel { position: fixed; z-index: 52; right: max(18px, env(safe-area-inset-right)); bottom: calc(max(18px, env(safe-area-inset-bottom)) + 70px); width: min(380px, calc(100vw - 24px)); height: min(520px, calc(100dvh - 120px)); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--white); box-shadow: var(--shadow); }
 .chat-panel[hidden] { display: none; }
-.chat-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
-.chat-header strong { display: block; font-size: 15px; }
+.chat-header { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 14px 54px; text-align: center; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.chat-close { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); }
+.chat-header strong { display: block; font-size: 16px; }
 .chat-header small { color: var(--muted); font-size: 11px; }
 .chat-log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 14px; overscroll-behavior: contain; }
 .chat-msg { max-width: 84%; padding: 10px 13px; border-radius: 16px; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-wrap; }
@@ -1374,3 +1378,28 @@ body, .auth-page, .verify-page, .profile-page, .setup-page, .dashboard-page, .ac
 .chat-send { width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--accent); color: #fff; font-size: 16px; cursor: pointer; }
 @media (max-width: 520px) { .chat-panel { right: 12px; left: 12px; width: auto; } }
 @media (prefers-reduced-motion: reduce) { .chat-fab.has-unread { animation: none; } .chat-fab { transition: none; } }
+
+.chat-typing { display: flex; gap: 5px; align-items: center; padding: 13px 15px; }
+.chat-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: chat-dot 1.2s ease-in-out infinite; }
+.chat-typing span:nth-child(2) { animation-delay: .15s; }
+.chat-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes chat-dot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .chat-typing span { animation: none; opacity: .7; } }
+
+/* Alarm icon: a plain line icon that follows the active theme (replaces the colour emoji). */
+.alarm-svg { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.18em; flex: none; }
+.task-alarm-button { color: var(--accent); }
+.task-alarm-button .alarm-svg { width: 18px; height: 18px; vertical-align: middle; }
+.task-alarm-button.has-alarm { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); }
+.task-time-toggle .alarm-svg { margin-right: 4px; }
+.task-time-badge .alarm-svg { width: 1em; height: 1em; }
+.alarm-ring-icon { display: grid; place-items: center; color: var(--accent); font-size: 46px; animation: none; }
+.alarm-ring-icon .alarm-svg { width: 1em; height: 1em; transform-origin: 50% 12%; animation: alarm-ring-swing 1.1s ease-in-out infinite; }
+.modal-symbol .alarm-svg { width: 26px; height: 26px; vertical-align: middle; }
+@keyframes alarm-ring-swing { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(10deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(6deg); } 80% { transform: rotate(-4deg); } }
+@media (prefers-reduced-motion: reduce) { .alarm-ring-icon .alarm-svg { animation: none; } }
+
+/* Tick circle: a real circle that fits phones and laptops (the old 44px minimum height stretched it into an oval). */
+.task-check { position: relative; width: 26px; height: 26px; min-width: 26px; min-height: 0; font-size: 13px; }
+.task-check::after { content: ""; position: absolute; inset: -9px; }
+@media (min-width: 900px) { .task-check { width: 24px; height: 24px; min-width: 24px; font-size: 12px; } .task-check::after { inset: -4px; } }
